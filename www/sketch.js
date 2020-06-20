@@ -9,6 +9,7 @@ var currentY = 10;
 
 var cost = 0;
 var gain = 0;
+var result = 0;
 
 var time = 60;
 var ptime = 0;
@@ -82,7 +83,7 @@ function setup() {
 
 function draw() {
   background(255);
-  debug();
+  // debug();
 
   if (0 < time) {
     playGame();
@@ -91,7 +92,7 @@ function draw() {
     gameOver();
   }
   dango_timer = millis() - rap;
-  if (dango_timer > 500) {
+  if (dango_timer > 50) {
     debug4++;
     time--;
     rap = millis();
@@ -104,6 +105,7 @@ function draw() {
 }
 
 function gameOver() {
+  calc();
   overUI();
 
 
@@ -232,7 +234,7 @@ function nextMino() {
       break;
 
   }
-  nextDangoColor = (Math.round(random() * 10) % 7)+1;
+  nextDangoColor = (Math.round(random() * 10) % 7) + 1;
 
 
 }
@@ -332,9 +334,25 @@ function overUI() {
   textAlign(CENTER, CENTER);
 
   textSize(30);
-  text("今回の団子出荷量は…", width / 2, height / 2 - 200);
+  text("今回の団子出荷量は…", width / 2, 100);
   textSize(50);
-  text(dango_num + "\t本", width / 2, height / 2);
+  text(dango_num + "\t本", width / 2, 200);
+  textSize(30);
+  text("収支", width / 2, 350);
+  textSize(40);
+  text("コスト\t" + cost + "\t円", width / 2, 400);
+  text("利益\t" + gain + "\t円", width / 2, 450);
+  textSize(30);
+  text("今回は・・・", width / 2, 600);
+  textSize(50);
+  if (0 <= result) {
+    fill(0);
+    text(result + "円の\n黒字！", width / 2, 550);
+  } else {
+    fill(255, 0, 0);
+    text(result*-1 + "円の\n赤字!", width / 2, 700);
+  }
+
 }
 
 //団子を出荷する
@@ -356,6 +374,7 @@ function shipping() {
   for (y = 1; y < BOARD_HEIGHT + WALL_MARJIN - 1; y++) {
     if (xflag[y] == 1) {
       for (x = 1; x < BOARD_WIDTH + WALL_MARJIN - 1; x++) {
+        gain += DangoType[getDangoType(board[y][x])][2];
         board[y][x] = BoardType.Free;
         dango_num++;
       }
@@ -391,7 +410,7 @@ function landing() {
     for (x__ = 0; x__ < MINO_AREA; x__++) {
       if (nextBoard[y__][x__] == 1) {
         board[y__ + currentY][x__ + currentX] = nextDangoColor;
-        debug1 = DangoType[getDangoType(nextDangoColor)][1];
+        cost += DangoType[getDangoType(nextDangoColor)][1];
       }
     }
   }
@@ -413,16 +432,8 @@ function canLanding() {
 
 
 
-function calcMino() {
-  for (y = 0; y < MINO_AREA; y++) {
-    for (x = 0; x < MINO_AREA; x++) {
-      if (nextBoard[y][x] == 1) {
-        rect(x * DANGO_SIZE + 20 + (currentX * DANGO_SIZE), y * DANGO_SIZE + 80 + (currentY * DANGO_SIZE), DANGO_SIZE, DANGO_SIZE);
-      }
-
-    }
-  }
-
+function calc() {
+  result = gain - cost;
 }
 
 /*フィールドの描画 */
