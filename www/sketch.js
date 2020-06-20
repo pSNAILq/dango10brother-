@@ -7,6 +7,9 @@ var MINO_AREA = 4;
 var currentX = 5;
 var currentY = 10;
 
+var cost = 0;
+var gain = 0;
+
 var time = 60;
 var ptime = 0;
 var dango_num = 0;
@@ -15,13 +18,9 @@ var dango_num = 0;
 var rap = 0;
 var dango_timer = 0;
 
-/*みの関係 */
-var topMino = 0;
-var botMino = 0;
-var rightMino = 0;
-var leftMino = 0;
 
 var nextMinoType = 0;
+var nextDangoColor;
 
 var board = new Array(BOARD_HEIGHT);
 
@@ -59,14 +58,14 @@ var MinoShapes = {
 };
 
 var DangoType = {
-  Mitarashi: 1,
-  Sakura: 2,
-  Yomogi: 3,
-  Shiro: 4,
-  Kosian: 5,
-  Kibi: 6,
-  Kinako: 7,
-  Goma: 8
+  Mitarashi: [1, 100, 120],
+  Sakura: [2, 120, 200],
+  Yomogi: [3, 105, 110],
+  Shiro: [4, 100, 90],
+  Kosian: [5, 110, 130],
+  Kibi: [6, 200, 300],
+  Kinako: [7, 120, 150],
+  Goma: [8, 150, 170]
 };
 
 var BoardType = {
@@ -83,15 +82,16 @@ function setup() {
 
 function draw() {
   background(255);
+  debug();
 
-  if(0<time){
+  if (0 < time) {
     playGame();
 
-  }else{
+  } else {
     gameOver();
   }
   dango_timer = millis() - rap;
-  if (dango_timer > 100) {
+  if (dango_timer > 500) {
     debug4++;
     time--;
     rap = millis();
@@ -103,14 +103,14 @@ function draw() {
 
 }
 
-function gameOver(){
+function gameOver() {
   overUI();
 
 
 }
 
-function playGame(){
-  
+function playGame() {
+
   field();
   playUI();
   // operation();
@@ -120,8 +120,8 @@ function playGame(){
 
 }
 
-function setMino(){
-    //設置
+function setMino() {
+  //設置
   if (mouseIsPressed && canLanding()) {
     landing();
     shipping();
@@ -135,7 +135,7 @@ function debug() {
   text(debug3, 170, 20);
   text('y' + currentY, 170, 50);
   text('x' + currentX, 170, 60);
-  text('a' + debug6, 250, 60);
+  text('a' + cost, 250, 60);
 
 }
 
@@ -158,6 +158,7 @@ function init() {
 
 }
 
+/*次のミノを生成 */
 function nextMino() {
   for (y = 0; y < MINO_AREA; y++) {
     nextBoard[y] = new Array(MINO_AREA).fill(0);
@@ -231,16 +232,11 @@ function nextMino() {
       break;
 
   }
+  nextDangoColor = (Math.round(random() * 10) % 7)+1;
+
 
 }
-function touchMoved() {
 
-  //ドラッグかスワイプ
-  if (touchY - ptouchY < -50) {
-    log("aa");
-  }
-
-}
 
 //ミノが動く
 function moveMino() {
@@ -256,18 +252,6 @@ function moveMino() {
 
 }
 
-//右端を取得
-function getRight() {
-  var x, y;
-  for (x = MINO_AREA - 1; 0 < x; x--) {
-    for (y = 0; y < MINO_AREA; y++) {
-      if (nextBoard[y][x] == 1) {
-        rightMino = x;
-      }
-    }
-
-  }
-}
 
 
 // //入力受付
@@ -330,7 +314,7 @@ function playUI() {
   fill('rgba(0,255,0, 0.25)');
   textAlign(CENTER);
   textSize(40);
-  text(time+"秒", (windowWidth / 2), 45);
+  text(time + "秒", (windowWidth / 2), 45);
   textSize(30);
   textAlign(CENTER, RIGHT);
   text(dango_num, 50, 45);
@@ -342,14 +326,15 @@ function playUI() {
 
 }
 
-function overUI(){
+/* ゲームオーバー画面UI の表示*/
+function overUI() {
   fill(0);
-  textAlign(CENTER,CENTER);
-  
+  textAlign(CENTER, CENTER);
+
   textSize(30);
-  text("今回の団子出荷量は…",width/2,height/2-200);
+  text("今回の団子出荷量は…", width / 2, height / 2 - 200);
   textSize(50);
-  text(dango_num+"\t本",width/2,height/2);
+  text(dango_num + "\t本", width / 2, height / 2);
 }
 
 //団子を出荷する
@@ -359,7 +344,7 @@ function shipping() {
   var x, y;
   for (y = 1; y < BOARD_HEIGHT + WALL_MARJIN - 1; y++) {
     for (x = 1; x < BOARD_WIDTH + WALL_MARJIN - 1; x++) {
-      if (board[y][x] == BoardType.Dango) {
+      if (board[y][x] != BoardType.Free) {
         xflag[y] *= 1;
         yflag[x] *= 1;
       } else {
@@ -395,10 +380,8 @@ function viewNextMino() {
       if (nextBoard[y][x] == 1) {
         rect(x * DANGO_SIZE + 20 + (currentX * DANGO_SIZE), y * DANGO_SIZE + 80 + (currentY * DANGO_SIZE), DANGO_SIZE, DANGO_SIZE);
       }
-
     }
   }
-
 }
 
 /*ミノの着地 */
@@ -407,7 +390,8 @@ function landing() {
   for (y__ = 0; y__ < MINO_AREA; y__++) {
     for (x__ = 0; x__ < MINO_AREA; x__++) {
       if (nextBoard[y__][x__] == 1) {
-        board[y__ + currentY][x__ + currentX] = BoardType.Dango;
+        board[y__ + currentY][x__ + currentX] = nextDangoColor;
+        debug1 = DangoType[getDangoType(nextDangoColor)][1];
       }
     }
   }
@@ -454,46 +438,53 @@ function field() {
         stroke(0);
         fill(0, 255, 255);
         rect(DANGO_SIZE * x + 20, DANGO_SIZE * y + 80, DANGO_SIZE, DANGO_SIZE);
-      } else if (board[y][x] == BoardType.Dango) { /*もし団子なら*/
-        stroke(0);
-        getDangoColor(DangoType.Shiro);
-        ellipse(DANGO_SIZE * x + 20, DANGO_SIZE * y + 80, DANGO_SIZE, DANGO_SIZE);
       } else {
         stroke(230, 0, 0);
         getDangoColor(board[y][x]);
         console.log(board[y][x]);
-        ellipse(DANGO_SIZE * x, DANGO_SIZE * y, DANGO_SIZE);
+        ellipse(DANGO_SIZE * x + 20, DANGO_SIZE * y + 80, DANGO_SIZE);
       }
     }
   }
 }
 
 /* 団子の色を取得 */
-function getDangoColor(type_dango) {
+function getDangoColor(type_dango, mode) {
   switch (type_dango) {
-    case DangoType.Sakura:
+    case DangoType.Sakura[0]:
       fill(254, 186, 255);
       break;
-    case DangoType.Goma:
+    case DangoType.Goma[0]:
       fill(191, 191, 191);
       break;
-    case DangoType.Mitarashi:
+    case DangoType.Mitarashi[0]:
       fill(168, 118, 61);
       break;
-    case DangoType.Kibi:
+    case DangoType.Kibi[0]:
       fill(255, 248, 150);
       break;
-    case DangoType.Kosian:
+    case DangoType.Kosian[0]:
       fill(107, 36, 64);
       break;
-    case DangoType.Kinako:
+    case DangoType.Kinako[0]:
       fill(217, 193, 134);
       break;
-    case DangoType.Shiro:
+    case DangoType.Shiro[0]:
       fill(255);
       break;
-    case DangoType.Yomogi:
+    case DangoType.Yomogi[0]:
       fill(7, 133, 23);
       break;
   }
+}
+
+function getDangoType(dango) {
+  var keys = Object.keys(DangoType);
+  var key;
+  for (var i = 0; i < keys.length; i++) {
+    if (dango === DangoType[keys[i]][0]) {
+      key = keys[i];
+    }
+  }
+  return key;
 }
