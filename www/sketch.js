@@ -91,16 +91,10 @@ function draw() {
     gameOver();
   }
   dango_timer = millis() - rap;
-  if (dango_timer > 1000) {
+  if (dango_timer > 100) {
     debug4++;
     time--;
     rap = millis();
-    // if (canMove() == 1) {
-    //   currentY++;
-    // } else {
-    //   nextMino();
-    //   currentY = 0;
-    // }
   }
 
   // debug1 = Math.floor((mouseX-5)/DANGO_SIZE);
@@ -110,13 +104,15 @@ function draw() {
 }
 
 function gameOver(){
+  overUI();
+
 
 }
 
 function playGame(){
   
   field();
-  UI();
+  playUI();
   // operation();
   viewNextMino();
   moveMino();
@@ -330,11 +326,11 @@ function getRight() {
 
 
 /* UI の表示*/
-function UI() {
+function playUI() {
   fill('rgba(0,255,0, 0.25)');
   textAlign(CENTER);
   textSize(40);
-  text(time, (windowWidth / 2), 45);
+  text(time+"秒", (windowWidth / 2), 45);
   textSize(30);
   textAlign(CENTER, RIGHT);
   text(dango_num, 50, 45);
@@ -344,6 +340,16 @@ function UI() {
 
 
 
+}
+
+function overUI(){
+  fill(0);
+  textAlign(CENTER,CENTER);
+  
+  textSize(30);
+  text("今回の団子出荷量は…",width/2,height/2-200);
+  textSize(50);
+  text(dango_num+"\t本",width/2,height/2);
 }
 
 //団子を出荷する
